@@ -7,7 +7,7 @@ import { NextResponse, type NextRequest } from "next/server";
  * el usuario siga autenticado entre navegaciones sin lógica manual.
  */
 export async function updateSession(request: NextRequest) {
-  let response = NextResponse.next({
+  let response = NextResponse.next({    
     request: { headers: request.headers },
   });
 
