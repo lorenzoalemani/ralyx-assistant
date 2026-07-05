@@ -52,7 +52,7 @@ export async function verifyWebhookSignature(
 }
 
 /**
- * Verifica el challenge de Meta al registrar el webhook (GET request).
+ * Verifica el challenge de Meta al registrar el webhook (GET request). 
  * Devuelve el challenge si el token es válido, null si no lo es.
  */
 export function verifyWebhookChallenge(
