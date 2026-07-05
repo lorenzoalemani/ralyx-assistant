@@ -77,6 +77,7 @@ export function ChatWindow({
       role:            "user",
       content:         trimmed,
       created_at:      new Date().toISOString(),
+      wamid: null,
     };
     setMessages((prev) => [...prev, optimisticUserMsg]);
 
