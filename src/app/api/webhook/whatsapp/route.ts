@@ -88,7 +88,7 @@ export async function POST(request: Request) {
 
   if (!connection) {
     // Número desconocido: responder 200 para que Meta no reintente.
-    console.warn(`[Webhook] phone_number_id desconocido: ${phoneNumberId}`);
+    //console.warn(`[Webhook] phone_number_id desconocido: ${phoneNumberId}`);
     return new Response("OK", { status: 200 });
   }
 
