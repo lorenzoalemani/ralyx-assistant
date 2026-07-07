@@ -50,10 +50,13 @@ export async function GET(request: Request) {
 // ─── POST: mensajes entrantes de WhatsApp ────────────────────────────────────
 
 export async function POST(request: Request) {
-  // Leer el body crudo ANTES de parsearlo: la verificación HMAC
-  // necesita exactamente el mismo string que firmó Meta.
+  // ESTO VA A FORZAR EL LOG Y EL CAMBIO EN GIT:
+  console.log("=== !!! LLEGÓ ALGO DE META !!! ===");
+
   const rawBody  = await request.text();
   const signature = request.headers.get("x-hub-signature-256") ?? "";
+  
+  // ... (el resto de tu código igual)
 
   // ── 1. Parsear el payload ────────────────────────────────────────────────
   let payload: WebhookPayload;
