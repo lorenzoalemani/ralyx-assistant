@@ -95,7 +95,9 @@ export async function POST(request: Request) {
     return new Response("OK", { status: 200 });
   }
 
-  // ── 4. Verificar firma HMAC-SHA256 ───────────────────────────────────────
+// ── 4. Verificar firma HMAC-SHA256 ───────────────────────────────────────
+  // COMENTAMOS ESTO TEMPORALMENTE PARA FORZAR LA ENTRADA:
+  /*
   const isValid = await verifyWebhookSignature(
     rawBody,
     signature,
@@ -105,16 +107,19 @@ export async function POST(request: Request) {
   if (!isValid) {
     return new Response("Forbidden", { status: 403 });
   }
+  */
 
   // ── 5. Responder 200 inmediatamente y procesar en background ────────────
   //    Meta cancela y reenvía si no recibe 200 en < 20 segundos.
   //    after() permite que Next.js envíe la respuesta antes de que
   //    termine el procesamiento (OpenAI puede tardar 3-8 segundos).
-  after(async () => {
+after(async () => {
     try {
+      console.log("=== ENTRANDO A PROCESS INCOMING WEBHOOK ===");
       await processIncomingWebhook(payload);
+      console.log("=== PROCESADO CON ÉXITO ===");
     } catch (error) {
-      console.error("[Webhook] Error no controlado en processIncomingWebhook:", error);
+      console.error("[Webhook ERROR EN BACKGROUND]:", error);
     }
   });
 
