@@ -18,8 +18,6 @@ export async function GET(request: Request) {
   }
 
   // Buscar la conexión cuyo verify_token coincida con el recibido.
-  // Meta no indica a qué negocio pertenece el GET, solo envía el token
-  // que configuramos nosotros — lo usamos para identificar la conexión.
   const supabase = createServiceClient();
 
   const { data: connection } = await supabase
@@ -50,36 +48,41 @@ export async function GET(request: Request) {
 // ─── POST: mensajes entrantes de WhatsApp ────────────────────────────────────
 
 export async function POST(request: Request) {
-  // ESTO VA A FORZAR EL LOG Y EL CAMBIO EN GIT:
-  console.log("=== !!! LLEGÓ ALGO DE META !!! ===");
+  const rawBody = await request.text();
 
-  const rawBody  = await request.text();
-  const signature = request.headers.get("x-hub-signature-256") ?? "";
-  
-  // ... (el resto de tu código igual)
+  // 1. LOG ULTRA DETALLADO: Ver exactamente qué nos está mandando Meta
+  console.log("=== [WEBHOOK ATENCIÓN] ¡LLEGÓ UN EVENTO DE META! ===");
+  console.log("Cuerpo crudo recibido:");
+  console.log(rawBody);
+  console.log("====================================================");
 
-  // ── 1. Parsear el payload ────────────────────────────────────────────────
+  // 2. Parsear el payload
   let payload: WebhookPayload;
   try {
     payload = JSON.parse(rawBody);
   } catch {
+    console.error("[Webhook ERROR] No se pudo parsear el JSON.");
     return new Response("Bad Request", { status: 400 });
   }
 
   // Meta puede enviar notificaciones que no son de WhatsApp Business
   if (payload.object !== "whatsapp_business_account") {
+    console.log(`[Webhook info] Objeto ignorado: ${payload.object}`);
     return new Response("OK", { status: 200 });
   }
 
-  // ── 2. Extraer phone_number_id para identificar la conexión ─────────────
+  // 3. Extraer phone_number_id para ver si coincide
   const phoneNumberId =
     payload.entry?.[0]?.changes?.[0]?.value?.metadata?.phone_number_id;
 
+  console.log(`[Webhook info] Phone Number ID detectado en payload: ${phoneNumberId}`);
+
   if (!phoneNumberId) {
+    console.log("[Webhook Alerta] No vino phone_number_id en el payload, deteniendo procesamiento prematuro.");
     return new Response("OK", { status: 200 });
   }
 
-  // ── 3. Buscar la conexión activa ─────────────────────────────────────────
+  // 4. Buscar la conexión activa en Supabase
   const supabase = createServiceClient();
 
   const { data: connection } = await supabase
@@ -90,14 +93,13 @@ export async function POST(request: Request) {
     .maybeSingle();
 
   if (!connection) {
-    // Número desconocido: responder 200 para que Meta no reintente.
-    //console.warn(`[Webhook] phone_number_id desconocido: ${phoneNumberId}`);
+    console.warn(`[Webhook Alerta] El phone_number_id ${phoneNumberId} no está registrado o activo en Supabase.`);
     return new Response("OK", { status: 200 });
   }
 
-// ── 4. Verificar firma HMAC-SHA256 ───────────────────────────────────────
-  // COMENTAMOS ESTO TEMPORALMENTE PARA FORZAR LA ENTRADA:
+  // 5. [Bypass Temporal] Omitimos la verificación HMAC-SHA256 para depurar
   /*
+  const signature = request.headers.get("x-hub-signature-256") ?? "";
   const isValid = await verifyWebhookSignature(
     rawBody,
     signature,
@@ -109,17 +111,15 @@ export async function POST(request: Request) {
   }
   */
 
-  // ── 5. Responder 200 inmediatamente y procesar en background ────────────
-  //    Meta cancela y reenvía si no recibe 200 en < 20 segundos.
-  //    after() permite que Next.js envíe la respuesta antes de que
-  //    termine el procesamiento (OpenAI puede tardar 3-8 segundos).
-after(async () => {
+  // 6. Ejecución del backend en segundo plano con after()
+  after(async () => {
     try {
-      console.log("=== ENTRANDO A PROCESS INCOMING WEBHOOK ===");
+      console.log("=== [BACKGROUND START] ENTRANDO A PROCESS INCOMING WEBHOOK ===");
       await processIncomingWebhook(payload);
-      console.log("=== PROCESADO CON ÉXITO ===");
+      console.log("=== [BACKGROUND SUCCESS] PROCESADO CON ÉXITO ===");
     } catch (error) {
-      console.error("[Webhook ERROR EN BACKGROUND]:", error);
+      console.error("=== [BACKGROUND ERROR] Error no controlado en processIncomingWebhook ===");
+      console.error(error);
     }
   });
 
