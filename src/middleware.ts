@@ -1,10 +1,17 @@
-import { type NextRequest } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 import { updateSession } from "@/lib/supabase/middleware";
 
 export async function middleware(request: NextRequest) {
-  // Si la petición va al webhook de WhatsApp, la dejamos pasar directo sin tocar Supabase Auth
-  if (request.nextUrl.pathname.startsWith("/api/webhook/whatsapp")) {
-    return;
+  const url = request.nextUrl.pathname;
+
+  // DETECTOR DE EMERGENCIA: Si entra CUALQUIER cosa a la ruta del webhook, lo forzamos a escupir un log
+  if (url.includes("webhook")) {
+    console.log(`!!! ALERTA DETECTOR: Entró petición a ${url} con método ${request.method}`);
+    
+    // Si es un POST de WhatsApp, dejamos pasar limpio rompiendo cualquier otra lógica
+    if (request.method === "POST") {
+      return NextResponse.next();
+    }
   }
   
   return updateSession(request);
@@ -12,9 +19,6 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    /*
-     * Corre en todas las rutas excepto archivos estáticos, assets y el webhook de WhatsApp
-     */
-    "/((?!_next/static|_next/image|favicon.ico|api/webhook/whatsapp|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };
