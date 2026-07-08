@@ -10,17 +10,23 @@ export async function GET(request: Request) {
   const token     = searchParams.get("hub.verify_token") ?? "";
   const challenge = searchParams.get("hub.challenge")    ?? "";
 
+  // PARCHE: Si Meta envía una petición de prueba vacía sin parámetros, le damos luz verde con un 200 directo
+  if (!token && !challenge) {
+    console.log("[webhook/GET] Petición de prueba sin parámetros detectada (Evitamos 403)");
+    return new Response("OK", { status: 200 });
+  }
+
   if (!token) {
     console.log("[webhook/GET] Sin token");
     return new Response("Forbidden", { status: 403 });
   }
 
-  // Desactivamos la verificación estricta de base de datos en el GET para evitar errores null
+  // Verificación forzada sin leer de base de datos para blindar el GET contra nulos
   const challengeResponse = verifyWebhookChallenge(
     mode,
     token,
     challenge,
-    "lolo1234" // Forzado directo con tu token activo
+    "lolo1234" 
   );
 
   if (!challengeResponse) {
