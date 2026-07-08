@@ -3,6 +3,7 @@ import { createServiceClient } from "@/lib/supabase/service";
 import { verifyWebhookSignature, verifyWebhookChallenge } from "@/lib/whatsapp/webhook";
 import { processIncomingWebhook } from "@/lib/whatsapp/processor";
 import { type WebhookPayload } from "@/lib/whatsapp/types";
+import crypto from 'crypto';
 
 // ─── GET: verificación del webhook al registrarlo en Meta ────────────────────
 
