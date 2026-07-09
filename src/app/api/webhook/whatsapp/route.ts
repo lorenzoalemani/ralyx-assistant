@@ -46,18 +46,22 @@ export async function POST(request: Request) {
   console.log("=================================");
   console.log("[webhook/POST] Request recibido");
 
-  const rawBody   = await request.text();
-  const signature = request.headers.get("x-hub-signature-256") ?? "";
+  const rawBody = await request.text();
 
-  console.log("[webhook/POST] Signature presente:", !!signature);
+console.log("RAW BODY:");
+console.log(rawBody);
 
-  let payload: WebhookPayload;
-  try {
-    payload = JSON.parse(rawBody);
-  } catch {
-    console.error("[webhook/POST] Error al parsear JSON");
-    return new Response("Bad Request", { status: 400 });
-  }
+let payload: WebhookPayload;
+
+try {
+  payload = JSON.parse(rawBody);
+} catch (err) {
+  console.error("NO SE PUDO PARSEAR");
+  console.error("Body recibido:", rawBody);
+  console.error(err);
+
+  return new Response("Bad Request", { status: 400 });
+}
 
   if (payload.object !== "whatsapp_business_account") {
     console.log("[webhook/POST] Object ignorado:", payload.object);
