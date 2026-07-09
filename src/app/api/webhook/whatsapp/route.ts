@@ -39,6 +39,11 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+  console.log("=================================");
+  console.log("ENTRÓ AL POST");
+  console.log(request.method);
+  console.log(request.headers.get("user-agent"));
+  console.log("=================================");
   console.log("[webhook/POST] Request recibido");
 
   const rawBody   = await request.text();
