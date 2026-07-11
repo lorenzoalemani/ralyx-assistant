@@ -1,10 +1,14 @@
 /**
- * Base de comunicación con la WhatsApp Cloud API de Meta.
- * Importa MetaApiRequestError desde el módulo compartido de Meta.
+ * Base de comunicación con la Instagram Messaging API (Graph API de Meta).
+ *
+ * A diferencia del cliente de WhatsApp, el access token se pasa como
+ * parámetro en cada llamada porque es por negocio (se obtiene de DB
+ * desencriptado con decryptToken()).
+ *
+ * Reutiliza META_API_VERSION y META_API_BASE_URL del entorno.
  */
 
 import { MetaApiRequestError, type MetaApiError } from "@/lib/meta/errors";
-import { getAccessToken } from "./secrets";
 
 export { MetaApiRequestError };
 
@@ -16,28 +20,26 @@ function getApiBaseUrl(): string {
   return process.env.META_API_BASE_URL ?? "https://graph.facebook.com";
 }
 
-export function buildApiUrl(path: string): string {
+export function buildInstagramApiUrl(path: string): string {
   return `${getApiBaseUrl()}/${getApiVersion()}/${path}`;
 }
 
-export function buildHeaders(): HeadersInit {
-  return {
-    "Authorization": `Bearer ${getAccessToken()}`,
-    "Content-Type":  "application/json",
-  };
-}
-
-export async function metaFetch<T>(
-  path:    string,
-  options: RequestInit = {}
+/**
+ * Wrapper tipado sobre fetch para la Graph API de Meta.
+ * El access token se pasa explícitamente — nunca se lee desde env.
+ */
+export async function instagramFetch<T>(
+  path:        string,
+  accessToken: string,
+  options:     RequestInit = {}
 ): Promise<T> {
-  const url      = buildApiUrl(path);
-  const headers  = buildHeaders();
+  const url = buildInstagramApiUrl(path);
 
   const response = await fetch(url, {
     ...options,
     headers: {
-      ...headers,
+      "Authorization": `Bearer ${accessToken}`,
+      "Content-Type":  "application/json",
       ...(options.headers ?? {}),
     },
   });
@@ -52,7 +54,7 @@ export async function metaFetch<T>(
     throw new MetaApiRequestError(
       response.status,
       metaError,
-      metaError?.message ?? `Meta API error ${response.status} en ${path}`
+      metaError?.message ?? `Instagram API error ${response.status} en ${path}`
     );
   }
 

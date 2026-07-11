@@ -26,26 +26,22 @@ export default async function BusinessLayout({
   const navLinks = [
     { href: `/dashboard/${businessId}`,             label: "Productos"     },
     { href: `/dashboard/${businessId}/knowledge`,   label: "Conocimiento"  },
+    { href: `/dashboard/${businessId}/instagram`,   label: "Instagram"     },
     { href: `/dashboard/${businessId}/whatsapp`,    label: "WhatsApp"      },
     { href: `/dashboard/${businessId}/assistant`,   label: "Asistente"     },
   ];
 
   return (
     <div>
-      {/* Breadcrumb */}
       <nav className="mb-6 flex items-center gap-2 text-sm text-muted">
-        <Link
-          href="/dashboard"
-          className="transition-colors hover:text-foreground"
-        >
+        <Link href="/dashboard" className="transition-colors hover:text-foreground">
           Mis negocios
         </Link>
         <span>/</span>
         <span className="text-foreground">{business.name}</span>
       </nav>
 
-      {/* Navegación interna */}
-      <div className="mb-8 flex gap-1 border-b border-border">
+      <div className="mb-8 flex gap-1 border-b border-border overflow-x-auto">
         {navLinks.map(({ href, label }) => (
           <NavLink key={href} href={href} label={label} />
         ))}
@@ -54,4 +50,4 @@ export default async function BusinessLayout({
       {children}
     </div>
   );
-} 
+}
